@@ -6,8 +6,6 @@ public final class CameraCapture {
 	private static VideoCapture camera = new VideoCapture(0);
 
 	public static void captureFrame(String name) {
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-
 		if (!camera.isOpened()) {
 			System.out.println("Error");
 		} else {
