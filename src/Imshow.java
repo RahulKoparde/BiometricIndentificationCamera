@@ -33,7 +33,7 @@ public class Imshow {
 	private Boolean sizeCustom;
 	private int height, width;
 	
-	public Imshow() {
+	private Imshow() {
 		window = new JFrame();
 		window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		image = new ImageIcon();

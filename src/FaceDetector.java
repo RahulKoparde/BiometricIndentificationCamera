@@ -13,17 +13,22 @@ import org.opencv.objdetect.CascadeClassifier;
 public class FaceDetector {
 	public static final String IMAGE_READ_PATH = "resources/";
 	public static final String IMAGE_WRITE_PATH = "bin/resources/";
+	public static final int THRESHOLD = 55;
 
+	public enum CameraTypes {
+		ENTER, EXIT
+	}
+	
 	public static void main(String[] args) {
 		int captureNumber = 0;
 		String username = "krdj";
 		String password = "m0ng0b0ng0s";
 		int port = 10064;
 		String name = "facebase";
-		
+
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		System.out.println("\nRunning FaceDetector");
-		
+
 		HashMap<UniqueFace, Rect> tracker = new HashMap<UniqueFace, Rect>();
 		Imshow im = new Imshow("Running...");
 		Database db = new Database(name, port, username, password);
@@ -40,20 +45,22 @@ public class FaceDetector {
 				Database.close();
 			}
 		});
-
-		while (true) {			
+		
+		Mat currentImage = null;
+		while (true) {
 			String filename = "capture" + Integer.toString(captureNumber)
 					+ ".jpg";
 			CameraCapture.captureFrame(filename);
-			Mat image = Highgui.imread(FaceDetector.class
+
+			currentImage = Highgui.imread(FaceDetector.class
 					.getResource(IMAGE_READ_PATH + filename).getPath()
 					.substring(1));
 
 			MatOfRect faceDetections = new MatOfRect();
-			faceDetector.detectMultiScale(image, faceDetections);
+			faceDetector.detectMultiScale(currentImage, faceDetections);
 
-			System.out.println(String.format("Detected %s faces",
-					faceDetections.toArray().length));
+//			System.out.println(String.format("Detected %s faces",
+//					faceDetections.toArray().length));
 
 			for (UniqueFace face : tracker.keySet()) {
 				Rect lastPosition = tracker.get(face);
@@ -69,7 +76,7 @@ public class FaceDetector {
 
 					if (lastLeft < right && lastRight > left && lastUp < down
 							&& lastDown > up) { // intersects
-						face.addImage(clip(image, rect));
+						face.addImage(clip(currentImage, rect));
 						tracker.put(face, rect);
 					}
 				}
@@ -80,30 +87,35 @@ public class FaceDetector {
 				UniqueFace face = i.next();
 				if (tracker.get(face) == null) {
 					// Face no longer visible send accumulated info to database
-					face.sendData(db);
+					for (int j = 0; j < db.maxID(); j++) {
+						if (face.compareFace(db.readFace(j), THRESHOLD) == true) {
+							face.setID(j);
+						}
+					}
+					face.sendData(db, CameraTypes.ENTER);
 					i.remove();
 				}
 			}
 
 			for (Rect rect : faceDetections.toArray()) {
-				Core.rectangle(image, new Point(rect.x, rect.y), new Point(
-						rect.x + rect.width, rect.y + rect.height), new Scalar(
-						0, 255, 0));
+				Core.rectangle(currentImage, new Point(rect.x, rect.y),
+						new Point(rect.x + rect.width, rect.y + rect.height),
+						new Scalar(0, 255, 0));
 				if (!tracker.values().contains(rect)) {
 					UniqueFace newFace = new UniqueFace();
-					newFace.addImage(clip(image, rect));
+					newFace.addImage(clip(currentImage, rect));
 					tracker.put(newFace, rect);
 				}
 			}
 
-			im.showImage(image);
+			im.showImage(currentImage);
 			filename = "output" + Integer.toString(captureNumber) + ".jpg";
-			System.out.println(String.format("Writing %s", filename));
-			Highgui.imwrite(IMAGE_WRITE_PATH + filename, image);
+//			System.out.println(String.format("Writing %s", filename));
+			Highgui.imwrite(IMAGE_WRITE_PATH + filename, currentImage);
 			++captureNumber;
 
 			try {
-				Thread.sleep(10);
+				Thread.sleep(100);
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}

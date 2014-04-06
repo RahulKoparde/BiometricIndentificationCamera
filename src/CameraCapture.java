@@ -20,6 +20,19 @@ public final class CameraCapture {
 		}
 	}
 	
+	public synchronized static Mat captureFrame() {
+		if (!camera.isOpened()) {
+			System.out.println("Error");
+		} else {
+			Mat frame = new Mat();
+			if (camera.read(frame)) {
+				return frame;
+			}
+		}
+		
+		return null;
+	}
+	
 	public synchronized static void release() {
 		if(camera != null) {
 			camera.release();

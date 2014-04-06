@@ -1,5 +1,8 @@
 import java.net.UnknownHostException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
 
 import org.opencv.core.Mat;
 
@@ -42,7 +45,8 @@ public class Database {
 		}
 	}
 
-	public void writeFace(String id, ArrayList<Mat> images) {
+	public synchronized void writeFace(String id, ArrayList<Mat> images,
+			FaceDetector.CameraTypes cameraType) {
 		byte[][] imagedata = new byte[images.size()][];
 		int[] widths = new int[images.size()];
 		int[] heights = new int[images.size()];
@@ -67,6 +71,16 @@ public class Database {
 		document.put("heights", heights);
 		document.put("types", types);
 		document.put("image", imagedata);
+		document.put("enter", cameraType.ordinal());
+
+		// Timestamp
+		DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd HH:mm:ss");
+		Calendar cal = Calendar.getInstance();
+		String date = dateFormat.format(cal.getTime());
+		document.put("timestamp", date);
+
+		System.out.println("Wrote face with " + images.size() + " pictures at "
+				+ date + " using camera " + cameraType.ordinal());
 		faceCollection.insert(document);
 	}
 
@@ -79,30 +93,13 @@ public class Database {
 		return cast;
 	}
 
-	private byte[][] objectToByte2D(Object[] arr) {
-		byte[][] cast2D = new byte[arr.length][];
-		for (int i = 0; i < arr.length; ++i) {
-			byte[] cast = (byte[]) (arr[i]);
-			cast2D[i] = cast;
-		}
-
-//		for (int i = 0; i < cast2D.length; ++i) {
-//			for (int j = 0; j < cast2D[i].length; ++j) {
-//				System.out.println(cast2D[i][j]);
-//			}
-//		}
-
-		return cast2D;
-	}
-
 	public synchronized UniqueFace readFace(int id) {
 		BasicDBObject query = new BasicDBObject("id", Integer.toString(id));
 		UniqueFace face = new UniqueFace();
 
 		if (faceCollection != null) {
-			printCursor(faceCollection.find(query));
 			DBCursor cursor = faceCollection.find(query);
-			if (cursor.hasNext()) {
+			while (cursor.hasNext()) {
 				DBObject result = cursor.next();
 
 				byte[][] bytes = objectToByte2D(((BasicDBList) result
@@ -113,19 +110,40 @@ public class Database {
 						.get("heights")).toArray());
 				Integer[] types = objectToInteger(((BasicDBList) result
 						.get("types")).toArray());
-				
+				String time = (result.get("timestamp")).toString();
+
 				face.setID(Integer.parseInt((String) result.get("id")));
 				for (int i = 0; i < widths.length; ++i) {
 					Mat mat = new Mat(widths[i], heights[i], types[i]);
 					mat.put(0, 0, bytes[i]);
 					face.addImage(mat);
 				}
+
+				System.out.println("Read face with "
+						+ Integer.toString(face.getImages().size())
+						+ " pictures at " + time);
 			}
 		} else {
 			System.out.println("null collection");
 		}
 
 		return face;
+	}
+
+	private byte[][] objectToByte2D(Object[] arr) {
+		byte[][] cast2D = new byte[arr.length][];
+		for (int i = 0; i < arr.length; ++i) {
+			byte[] cast = (byte[]) (arr[i]);
+			cast2D[i] = cast;
+		}
+
+		// for (int i = 0; i < cast2D.length; ++i) {
+		// for (int j = 0; j < cast2D[i].length; ++j) {
+		// System.out.println(cast2D[i][j]);
+		// }
+		// }
+
+		return cast2D;
 	}
 
 	public synchronized void print() {
@@ -151,5 +169,22 @@ public class Database {
 		if (client != null) {
 			client.close();
 		}
+	}
+
+	public int maxID() {
+		int max = 0;
+
+		if (faceCollection != null) {
+			DBCursor cursor = faceCollection.find();
+			while (cursor.hasNext()) {
+				DBObject result = cursor.next();
+				int id = Integer.parseInt((String) result.get("id"));
+				if (id > max) {
+					max = id;
+				}
+			}
+		}
+
+		return max;
 	}
 }
