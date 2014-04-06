@@ -1,5 +1,4 @@
 import java.awt.Point;
-import java.awt.Window;
 import java.util.ArrayList;
 
 import org.opencv.core.Mat;
@@ -13,12 +12,20 @@ public class UniqueFace {
 		depictions = new ArrayList<Mat>();
 		faceID = faceCounter++;
 	}
+	
+	public void setID(int id) {
+		faceID = id;
+	}
 
 	public void addImage(Mat m) {
 		depictions.add(m);
 	}
-
-	public void sendData() {
+	
+	public void sendData(Database db) {	
+		db.writeFace(Integer.toString(faceID), depictions);
+	}
+	
+	public void print() {
 		int i = 0;
 		int x = 0;
 		int y = 0;
@@ -36,5 +43,13 @@ public class UniqueFace {
 				y = 0;
 			}
 		}
+	}
+	
+	public int getID() {
+		return faceID;
+	}
+	
+	public ArrayList<Mat> getImages() {
+		return depictions;
 	}
 }

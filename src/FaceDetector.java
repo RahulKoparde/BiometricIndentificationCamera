@@ -16,19 +16,32 @@ public class FaceDetector {
 
 	public static void main(String[] args) {
 		int captureNumber = 0;
-		HashMap<UniqueFace, Rect> tracker = new HashMap<UniqueFace, Rect>();
-
+		String username = "krdj";
+		String password = "m0ng0b0ng0s";
+		int port = 10064;
+		String name = "facebase";
+		
 		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
 		System.out.println("\nRunning FaceDetector");
-
+		
+		HashMap<UniqueFace, Rect> tracker = new HashMap<UniqueFace, Rect>();
 		Imshow im = new Imshow("Running...");
+		Database db = new Database(name, port, username, password);
 
 		CascadeClassifier faceDetector = new CascadeClassifier();
 		faceDetector.load(FaceDetector.class
 				.getResource("resources/haarcascade_frontalface_alt.xml")
 				.getPath().substring(1));
 
-		while (true) {
+		Runtime.getRuntime().addShutdownHook(new Thread() {
+			public void run() {
+				System.out.println("Closing...");
+				CameraCapture.release();
+				Database.close();
+			}
+		});
+
+		while (true) {			
 			String filename = "capture" + Integer.toString(captureNumber)
 					+ ".jpg";
 			CameraCapture.captureFrame(filename);
@@ -67,7 +80,7 @@ public class FaceDetector {
 				UniqueFace face = i.next();
 				if (tracker.get(face) == null) {
 					// Face no longer visible send accumulated info to database
-					face.sendData();
+					face.sendData(db);
 					i.remove();
 				}
 			}
