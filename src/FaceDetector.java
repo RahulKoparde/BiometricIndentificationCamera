@@ -12,13 +12,13 @@ import org.opencv.objdetect.CascadeClassifier;
 
 public class FaceDetector {
 	public static final String IMAGE_READ_PATH = "resources/";
-	public static final String IMAGE_WRITE_PATH = "bin/resources/";
+	public static final String IMAGE_WRITE_PATH = "src/resources/";
 	public static final int THRESHOLD = 55;
 
 	public enum CameraTypes {
 		ENTER, EXIT
 	}
-	
+
 	public static void main(String[] args) {
 		int captureNumber = 0;
 		String username = "krdj";
@@ -36,7 +36,11 @@ public class FaceDetector {
 		CascadeClassifier faceDetector = new CascadeClassifier();
 		faceDetector.load(FaceDetector.class
 				.getResource("resources/haarcascade_frontalface_alt.xml")
-				.getPath().substring(1));
+				.getPath().substring(1)); //WINDOWS
+
+		// faceDetector.load(FaceDetector.class
+		// .getResource("resources/haarcascade_frontalface_alt.xml")
+		// .getPath()); //OSX
 
 		Runtime.getRuntime().addShutdownHook(new Thread() {
 			public void run() {
@@ -45,7 +49,7 @@ public class FaceDetector {
 				Database.close();
 			}
 		});
-		
+
 		Mat currentImage = null;
 		while (true) {
 			String filename = "capture" + Integer.toString(captureNumber)
@@ -54,13 +58,16 @@ public class FaceDetector {
 
 			currentImage = Highgui.imread(FaceDetector.class
 					.getResource(IMAGE_READ_PATH + filename).getPath()
-					.substring(1));
+					.substring(1)); // WINDOWS
+
+			// currentImage = Highgui.imread(FaceDetector.class
+			// .getResource(IMAGE_READ_PATH + filename).getPath()); //OSX
 
 			MatOfRect faceDetections = new MatOfRect();
 			faceDetector.detectMultiScale(currentImage, faceDetections);
 
-//			System.out.println(String.format("Detected %s faces",
-//					faceDetections.toArray().length));
+			// System.out.println(String.format("Detected %s faces",
+			// faceDetections.toArray().length));
 
 			for (UniqueFace face : tracker.keySet()) {
 				Rect lastPosition = tracker.get(face);
@@ -110,7 +117,7 @@ public class FaceDetector {
 
 			im.showImage(currentImage);
 			filename = "output" + Integer.toString(captureNumber) + ".jpg";
-//			System.out.println(String.format("Writing %s", filename));
+			// System.out.println(String.format("Writing %s", filename));
 			Highgui.imwrite(IMAGE_WRITE_PATH + filename, currentImage);
 			++captureNumber;
 
