@@ -10,7 +10,8 @@ public class UniqueFace {
 	private ArrayList<Mat> depictions;
 	private int faceID = 0;
 	private static int faceCounter = 0;
-
+	private Imshow disp = new Imshow("disp");
+	
 	public UniqueFace() {
 		depictions = new ArrayList<Mat>();
 		faceID = faceCounter++;
@@ -63,9 +64,9 @@ public class UniqueFace {
 	}
 	
 	public boolean compareFace(UniqueFace face, int threshold) {
-		for(int i = 0; (i < face.getImages().size() && i < 10); ++i) {
+		for(int i = 0; (i < face.getImages().size() && i < 7); ++i) {
 			Mat m1 = face.getImages().get(i);
-			for(int j = 0; (j < depictions.size() && j < 10); ++j) {
+			for(int j = 0; (j < depictions.size() && j < 7); ++j) {
 				Mat m2 = depictions.get(j);
 				int matches = 0;
 				
@@ -75,7 +76,10 @@ public class UniqueFace {
 				Imgproc.resize(m2, m2, size);
 				Core.absdiff(m2, m1, result);
 				Imgproc.threshold(result, result, threshold, 255, Imgproc.THRESH_BINARY_INV);
-				new Imshow("diff databaseimg=" + i + " selfimg=" + j).showImage(result);
+
+				disp.setTitle("diff databaseimg=" + i + " selfimg=" + j);
+				disp.setSize((int)result.width(), (int)result.height());
+				disp.showImage(result);
 				
 				for(int r = 0; r < result.rows(); ++r) {
 					for(int c = 0; c < result.cols(); ++c) {

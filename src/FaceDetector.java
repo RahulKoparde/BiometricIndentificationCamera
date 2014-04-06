@@ -12,7 +12,8 @@ import org.opencv.objdetect.CascadeClassifier;
 
 public class FaceDetector {
 	public static final String IMAGE_READ_PATH = "resources/";
-	public static final String IMAGE_WRITE_PATH = "src/resources/";
+	//Change to bin/ in testing and src/ in production
+	public static final String IMAGE_WRITE_PATH = "src/resources/"; 
 	public static final int THRESHOLD = 55;
 
 	public enum CameraTypes {

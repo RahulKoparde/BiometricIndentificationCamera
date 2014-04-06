@@ -76,4 +76,12 @@ public class Imshow {
 			e.printStackTrace();
 		}
 	}
+
+	public void setTitle(String title) {
+		window.setTitle(title);
+	}
+	
+	public void setSize(int width, int height) {
+		window.setSize(width, height);
+	}
 }

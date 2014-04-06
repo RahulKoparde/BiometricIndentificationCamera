@@ -155,7 +155,7 @@ public class Database {
 		}
 	}
 
-	private void printCursor(DBCursor cursor) {
+	private synchronized void printCursor(DBCursor cursor) {
 		try {
 			while (cursor.hasNext()) {
 				System.out.println(cursor.next());
@@ -171,7 +171,7 @@ public class Database {
 		}
 	}
 
-	public int maxID() {
+	public synchronized int maxID() {
 		int max = 0;
 
 		if (faceCollection != null) {
